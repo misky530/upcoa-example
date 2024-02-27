@@ -1,5 +1,6 @@
 import asyncio
 import sys
+
 sys.path.insert(0, "..")
 import math
 
@@ -8,7 +9,6 @@ from asyncua.server.history_sql import HistorySQLite
 
 
 async def main():
-
     # setup our server
     server = Server()
 
@@ -34,11 +34,18 @@ async def main():
     await myvar.set_writable()  # Set MyVariable to be writable by clients
     print(myvar)
 
+    # var2
+    # my_var2=await myobj.add_variable(idx, "MyVariable2", ua.Variant(0, ua.VariantType.))
+    # my_string_var = await myobj.add_variable(idx, "MyStringVariable", ua.Variant(0, ua.VariantType.String))
+    my_string_var = await myobj.add_variable(idx, "MyStringVariable", ua.Variant(0, ua.VariantType.Double))
+    await my_string_var.set_writable()
+
     # starting!
     await server.start()
 
     # enable data change history for this particular node, must be called after start since it uses subscription
     await server.historize_node_data_change(myvar, period=None, count=100)
+    # await server.historize_node_data_change(my_string_var, period=None, count=100)
 
     try:
         count = 0
@@ -46,10 +53,13 @@ async def main():
             await asyncio.sleep(1)
             count += 0.1
             await myvar.write_value(math.sin(count))
+            await my_string_var.write_value(math.sin(count) + 100)
+            # await my_string_var.write_value(f'msg:')
 
     finally:
         # close connection, remove subscriptions, etc
         await server.stop()
+
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
